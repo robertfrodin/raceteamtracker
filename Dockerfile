@@ -15,9 +15,9 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Remove default nginx config
 RUN rm /etc/nginx/conf.d/default.conf
 
-# Create nginx config for SPA that listens on port 3000
+# Create nginx config template that uses PORT environment variable
 RUN echo 'server {\
-    listen 3000;\
+    listen ${PORT};\
     server_name localhost;\
     root /usr/share/nginx/html;\
     index index.html;\
@@ -30,11 +30,19 @@ RUN echo 'server {\
         expires 1y;\
         add_header Cache-Control "public, immutable";\
     }\
-}' > /etc/nginx/conf.d/default.conf
+}' > /etc/nginx/conf.d/default.conf.template
 
-# Verify files and config
-RUN echo "=== Nginx config ===" && cat /etc/nginx/conf.d/default.conf
-RUN echo "=== HTML files ===" && ls -la /usr/share/nginx/html/
+# Install envsubst for environment variable substitution
+RUN apk add --no-cache gettext
 
-EXPOSE 3000
-CMD ["nginx", "-g", "daemon off;"]
+# Create startup script that substitutes PORT and starts nginx
+RUN echo '#!/bin/sh\necho "Starting nginx on port ${PORT:-3000}"\nenvsubst < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf\ncat /etc/nginx/conf.d/default.conf\nnginx -g "daemon off;"' > /start.sh && chmod +x /start.sh
+
+# Set default port (Back4App will override this)
+ENV PORT=3000
+
+# Expose the port
+EXPOSE $PORT
+
+# Start with our custom script
+CMD ["/start.sh"]
