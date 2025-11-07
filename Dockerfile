@@ -16,28 +16,23 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Production stage - Use nginx for better stability
-FROM nginx:alpine AS production
+# Production stage
+FROM node:22-alpine AS production
 
-# Copy built application to nginx html directory
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Set working directory
+WORKDIR /app
 
-# Create nginx config for SPA
-RUN echo 'server { \
-    listen 3000; \
-    server_name localhost; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    location / { \
-        try_files $uri $uri/ /index.html; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+# Install serve globally
+RUN npm install -g serve
 
-# Remove default nginx config
-RUN rm /etc/nginx/conf.d/default.conf.bak 2>/dev/null || true
+# Copy built application from builder stage
+COPY --from=builder /app/dist ./dist
+
+# Default port (Back4app will override with PORT env var)
+ENV PORT=3000
 
 # Expose port
-EXPOSE 3000
+EXPOSE $PORT
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start the application using PORT environment variable
+CMD ["sh", "-c", "serve -s dist -l $PORT"]
