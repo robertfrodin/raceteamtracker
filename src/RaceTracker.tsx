@@ -1,30 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, type SetStateAction, type JSXElementConstructor, type Key, type ReactElement, type ReactNode, type ReactPortal } from 'react';
 import { Upload, Search, CheckCircle, Trophy, Download, Trash2, AlertTriangle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import './App.css'
 
 export default function RaceTracker() {
-  const [runners, setRunners] = useState([]);
-  const [teams, setTeams] = useState({});
+  const [runners, setRunners] = useState<any[]>([]);
+  const [teams, setTeams] = useState<{[key: string]: any}>({});
   const [bibSearch, setBibSearch] = useState('');
-  const [selectedTeam, setSelectedTeam] = useState(null);
-  const [finishedTeams, setFinishedTeams] = useState([]);
+  const [selectedTeam, setSelectedTeam] = useState<any>(null);
+  const [finishedTeams, setFinishedTeams] = useState<any[]>([]);
   const [view, setView] = useState('search'); // 'search' or 'results'
   const [lastFPress, setLastFPress] = useState(0);
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState('');
   const [showFinishModal, setShowFinishModal] = useState(false);
-  const [finishModalTeam, setFinishModalTeam] = useState(null);
+  const [finishModalTeam, setFinishModalTeam] = useState<any>(null);
   const [editableFinishTime, setEditableFinishTime] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editModalTeam, setEditModalTeam] = useState(null);
+  const [editModalTeam, setEditModalTeam] = useState<any>(null);
   const [activeDistanceTab, setActiveDistanceTab] = useState('all');
 
   useEffect(() => {
     loadFromStorage();
 
     // Add double-tap F hotkey for finish
-    const handleKeyPress = (e) => {
+    const handleKeyPress = (e: { key: string; preventDefault: () => void; }) => {
       if (e.key === 'f' || e.key === 'F') {
         const now = Date.now();
         if (now - lastFPress < 500) { // 500ms window for double tap
@@ -57,7 +57,7 @@ export default function RaceTracker() {
     }
   };
 
-  const saveToStorage = (runnersData, teamsData, finishedData) => {
+  const saveToStorage = (runnersData: any[], teamsData: {}, finishedData: any[]) => {
     try {
       localStorage.setItem('runners', JSON.stringify(runnersData));
       localStorage.setItem('teams', JSON.stringify(teamsData));
@@ -67,12 +67,13 @@ export default function RaceTracker() {
     }
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (event) => {
+      if (!event.target) return;
       const workbook = XLSX.read(event.target.result, { type: 'binary' });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
@@ -83,9 +84,9 @@ export default function RaceTracker() {
     reader.readAsBinaryString(file);
   };
 
-  const processStartList = (data) => {
-    const processedRunners = [];
-    const teamMap = {};
+  const processStartList = (data: any[]) => {
+    const processedRunners: any[] | ((prevState: never[]) => never[]) = [];
+    const teamMap: { [key: string]: any } = {};
     let bibCounter = 1;
 
     data.forEach((row) => {
@@ -175,7 +176,7 @@ export default function RaceTracker() {
     setSelectedTeam(null);
   };
 
-  const openFinishModal = (team) => {
+  const openFinishModal = (team: SetStateAction<null>) => {
     setFinishModalTeam(team);
     setEditableFinishTime(new Date().toLocaleTimeString('en-GB'));
     setShowFinishModal(true);
@@ -208,7 +209,7 @@ export default function RaceTracker() {
     setEditableFinishTime('');
   };
 
-  const openEditModal = (team) => {
+  const openEditModal = (team: { finishTime: SetStateAction<string>; }) => {
     setEditModalTeam(team);
     setEditableFinishTime(team.finishTime);
     setShowEditModal(true);
@@ -233,7 +234,7 @@ export default function RaceTracker() {
 
   const exportResults = () => {
     // Create a map of team names to their finish data
-    const finishMap = {};
+    const finishMap: {[key: string]: {placement: number, finishTime: string}} = {};
     finishedTeams.forEach((team, idx) => {
       finishMap[team.teamName] = {
         placement: idx + 1,
@@ -435,7 +436,7 @@ export default function RaceTracker() {
 
                     <h3 className="font-semibold text-lg mb-2">Team Members:</h3>
                     <div className="space-y-2">
-                      {selectedTeam.runners.map((runner, idx) => (
+                      {selectedTeam.runners.map((runner: { firstName: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; lastName: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; gender: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; nationality: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }, idx: Key | null | undefined) => (
                         <div key={idx} className="p-3 bg-gray-50 rounded border border-gray-200">
                           <p className="font-semibold">{runner.firstName} {runner.lastName}</p>
                           <p className="text-sm text-gray-600">{runner.gender} • {runner.nationality}</p>
