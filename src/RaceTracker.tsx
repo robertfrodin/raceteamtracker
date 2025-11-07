@@ -88,7 +88,6 @@ export default function RaceTracker() {
     const processedRunners: any[] | ((prevState: never[]) => never[]) = [];
     const teamMap: { [key: string]: any } = {};
     const teamBibMap: { [key: string]: number } = {}; // Map team names to bib numbers
-    let bibCounter = 1;
 
     // First pass: create teams and assign bib numbers
     data.forEach((row) => {
