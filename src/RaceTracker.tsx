@@ -437,7 +437,7 @@ export default function RaceTracker() {
                         }`}
                       >
                         <CheckCircle className="w-5 h-5" />
-                        Register Finish
+                        <span className="hidden md:inline">Register Finish</span>
                       </button>
                     </div>
 
