@@ -16,23 +16,28 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Production stage
-FROM node:22-alpine AS production
+# Production stage - Use nginx for better stability
+FROM nginx:alpine AS production
 
-# Set working directory
-WORKDIR /app
+# Copy built application to nginx html directory
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Install serve globally
-RUN npm install -g serve
+# Create nginx config for SPA
+RUN echo 'server { \
+    listen 3000; \
+    server_name localhost; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
 
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
+# Remove default nginx config
+RUN rm /etc/nginx/conf.d/default.conf.bak 2>/dev/null || true
 
 # Expose port
 EXPOSE 3000
 
-# Set environment variable
-ENV NODE_ENV=production
-
-# Start the application
-CMD ["serve", "-s", "dist", "-l", "3000"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
