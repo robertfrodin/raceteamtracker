@@ -28,11 +28,19 @@ RUN npm install -g serve
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 
+# Debug: Verify files were copied correctly
+RUN echo "Contents of /app:" && ls -la /app/
+RUN echo "Contents of /app/dist:" && ls -la /app/dist/
+
 # Default port (Back4app will override with PORT env var)
 ENV PORT=3000
 
 # Expose port
 EXPOSE $PORT
 
-# Start the application using PORT environment variable
-CMD ["sh", "-c", "serve -s dist -l $PORT"]
+# Create a startup script that provides better debugging
+RUN echo '#!/bin/sh\necho "Starting server on port $PORT"\necho "Files in dist directory:"\nls -la /app/dist/\necho "Starting serve..."\nserve -s /app/dist -l $PORT --single --no-clipboard --verbose' > /start.sh
+RUN chmod +x /start.sh
+
+# Start the application
+CMD ["/start.sh"]
