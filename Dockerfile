@@ -1,46 +1,40 @@
 # Build stage
 FROM node:22-alpine AS builder
-
-# Set working directory
 WORKDIR /app
-
-# Copy package files for better layer caching
 COPY package*.json ./
-
-# Install ALL dependencies (including devDependencies for build)
 RUN npm ci --silent
-
-# Copy source code
 COPY . .
-
-# Build the application
 RUN npm run build
 
-# Production stage
-FROM node:22-alpine AS production
+# Production stage with nginx
+FROM nginx:alpine
 
-# Set working directory
-WORKDIR /app
+# Copy built application
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Install serve globally
-RUN npm install -g serve
+# Remove default nginx config
+RUN rm /etc/nginx/conf.d/default.conf
 
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
+# Create nginx config for SPA that listens on port 3000
+RUN echo 'server {\
+    listen 3000;\
+    server_name localhost;\
+    root /usr/share/nginx/html;\
+    index index.html;\
+\
+    location / {\
+        try_files $uri $uri/ /index.html;\
+    }\
+\
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {\
+        expires 1y;\
+        add_header Cache-Control "public, immutable";\
+    }\
+}' > /etc/nginx/conf.d/default.conf
 
-# Debug: Verify files were copied correctly
-RUN echo "Contents of /app:" && ls -la /app/
-RUN echo "Contents of /app/dist:" && ls -la /app/dist/
+# Verify files and config
+RUN echo "=== Nginx config ===" && cat /etc/nginx/conf.d/default.conf
+RUN echo "=== HTML files ===" && ls -la /usr/share/nginx/html/
 
-# Default port (Back4app will override with PORT env var)
-ENV PORT=3000
-
-# Expose port
-EXPOSE $PORT
-
-# Create a startup script that provides better debugging
-RUN echo '#!/bin/sh\necho "Starting server on port $PORT"\necho "Files in dist directory:"\nls -la /app/dist/\necho "Starting serve..."\nserve -s /app/dist -l $PORT --single --no-clipboard --verbose' > /start.sh
-RUN chmod +x /start.sh
-
-# Start the application
-CMD ["/start.sh"]
+EXPOSE 3000
+CMD ["nginx", "-g", "daemon off;"]
