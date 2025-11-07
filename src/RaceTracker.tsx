@@ -87,16 +87,28 @@ export default function RaceTracker() {
   const processStartList = (data: any[]) => {
     const processedRunners: any[] | ((prevState: never[]) => never[]) = [];
     const teamMap: { [key: string]: any } = {};
+    const teamBibMap: { [key: string]: number } = {}; // Map team names to bib numbers
     let bibCounter = 1;
 
+    // First pass: create teams and assign bib numbers
     data.forEach((row) => {
       const teamName = row['Team name'] || 'Individual';
-      const rawDistance = row['Distance Name'] || '';
+      
+      // Assign bib number to team if not already assigned
+      if (!teamBibMap[teamName]) {
+        teamBibMap[teamName] = row['Bib'];
+      }
+    });
+
+    // Second pass: process runners with team bib numbers
+    data.forEach((row) => {
+      const teamName = row['Team name'] || 'Individual';
+      const rawDistance = row['Distance'] || '';
       // Clean distance: remove everything in parentheses and trim
       const cleanDistance = rawDistance.replace(/\s*\(.*?\)\s*/g, '').trim();
       
       const runner = {
-        bib: bibCounter++,
+        bib: teamBibMap[teamName], // Use team bib number
         firstName: row['First Name'] || '',
         lastName: row['Last Name'] || row['last name'] || '',
         email: row['Email'] || '',
@@ -121,7 +133,7 @@ export default function RaceTracker() {
       if (!teamMap[teamName]) {
         teamMap[teamName] = {
           teamName: teamName,
-          bib: runner.bib,
+          bib: teamBibMap[teamName], // Use team bib number
           runners: [],
           country: runner.country,
           city: runner.city,
@@ -139,10 +151,11 @@ export default function RaceTracker() {
 
   const searchByBib = () => {
     const bib = parseInt(bibSearch);
-    const runner = runners.find(r => r.bib === bib);
+    // Find the team that has this bib number
+    const team = Object.values(teams).find(team => team.bib === bib);
     
-    if (runner && teams[runner.teamName]) {
-      setSelectedTeam(teams[runner.teamName]);
+    if (team) {
+      setSelectedTeam(team);
     } else {
       setSelectedTeam(null);
       alert('Bib number not found');
@@ -381,8 +394,8 @@ export default function RaceTracker() {
             {view === 'search' ? (
               <div className="space-y-6">
                 <div className="bg-white rounded-lg shadow-lg p-6">
-                  <h2 className="text-xl font-bold mb-4">Enter Bib Number</h2>
-                  <p className="text-sm text-gray-600 mb-3">Double-tap F to register finish after search</p>
+                  <h2 className="text-xl font-bold mb-4">Enter Team Bib Number</h2>
+                  <p className="text-sm text-gray-600 mb-3">Search by team bib number • Double-tap F to register finish after search</p>
                   <div className="flex gap-2">
                     <input
                       type="number"
@@ -391,7 +404,7 @@ export default function RaceTracker() {
                       value={bibSearch}
                       onChange={(e) => setBibSearch(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && searchByBib()}
-                      placeholder="Bib..."
+                      placeholder="Team Bib..."
                       className="flex-1 min-w-0 px-3 py-2 text-xl sm:text-2xl sm:px-4 sm:py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
                     />
                     <button
@@ -430,7 +443,7 @@ export default function RaceTracker() {
                     </div>
 
                     <div className="mb-4 text-gray-700">
-                      <p><strong>Origin:</strong> {selectedTeam.city}, {selectedTeam.country}</p>
+                      <p><strong>Origin:</strong> {selectedTeam.city}{selectedTeam.country ? `, ${selectedTeam.country}` : ''}</p>
                       {selectedTeam.club && <p><strong>Club:</strong> {selectedTeam.club}</p>}
                     </div>
 
@@ -439,7 +452,7 @@ export default function RaceTracker() {
                       {selectedTeam.runners.map((runner: { firstName: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; lastName: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; gender: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; nationality: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }, idx: Key | null | undefined) => (
                         <div key={idx} className="p-3 bg-gray-50 rounded border border-gray-200">
                           <p className="font-semibold">{runner.firstName} {runner.lastName}</p>
-                          <p className="text-sm text-gray-600">{runner.gender} • {runner.nationality}</p>
+                          <p className="text-sm text-gray-600">{runner.gender}</p>
                         </div>
                       ))}
                     </div>

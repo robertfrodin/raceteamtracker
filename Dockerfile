@@ -22,11 +22,12 @@ RUN npm install -g serve
 RUN echo '#!/bin/sh\n\
 echo "=== Container Startup Debug ===" \n\
 echo "PORT environment variable: ${PORT:-not set}" \n\
-echo "Using port: ${PORT:-3000}" \n\
+echo "Default port: 3000" \n\
 echo "Files in dist directory:" \n\
 ls -la /app/dist/ \n\
-echo "Starting serve on port ${PORT:-3000}..." \n\
-serve -s dist -l ${PORT:-3000} --no-clipboard --single' > /start.sh && chmod +x /start.sh
+echo "Starting serve on port 3000..." \n\
+echo "Server will be accessible at: http://localhost:3000" \n\
+serve -s dist -l 3000 --no-clipboard --single' > /start.sh && chmod +x /start.sh
 
 # Expose port
 EXPOSE 3000
