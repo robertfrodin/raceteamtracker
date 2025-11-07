@@ -310,7 +310,7 @@ export default function RaceTracker() {
         <header className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-3xl font-bold text-indigo-900 mb-2">Team Info Finder</h2>
+              <h2 className="text-3xl font-bold text-indigo-900 mb-2">KTR Team Tracker</h2>
               <p className="text-gray-600 hidden sm:block">Track teams and log finish times</p>
             </div>
             {runners.length > 0 && (
