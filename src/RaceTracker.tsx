@@ -3,18 +3,30 @@ import { Upload, Search, CheckCircle, Trophy, Download, Trash2, AlertTriangle } 
 import * as XLSX from 'xlsx';
 import './App.css'
 
+type Team = {
+  teamName: string;
+  bib: number;
+  runners: { firstName: string; lastName: string; gender: string; nationality: string }[];
+  city: string;
+  country: string;
+  club: string;
+  distance: string;
+  finishTime?: string;
+};
+
 export default function RaceTracker() {
   const [runners, setRunners] = useState<any[]>([]);
-  const [teams, setTeams] = useState<{[key: string]: any}>({});
+  const [teams, setTeams] = useState<Record<string, Team>>({});
   const [bibSearch, setBibSearch] = useState('');
-  const [selectedTeam, setSelectedTeam] = useState<any>(null);
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const [searchHistory, setSearchHistory] = useState<Team[]>([]);
   const [finishedTeams, setFinishedTeams] = useState<any[]>([]);
   const [view, setView] = useState('search'); // 'search' or 'results'
   const [lastFPress, setLastFPress] = useState(0);
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState('');
   const [showFinishModal, setShowFinishModal] = useState(false);
-  const [finishModalTeam, setFinishModalTeam] = useState<any>(null);
+  const [finishModalTeam, setFinishModalTeam] = useState<Team | null>(null);
   const [editableFinishTime, setEditableFinishTime] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
   const [editModalTeam, setEditModalTeam] = useState<any>(null);
@@ -86,7 +98,7 @@ export default function RaceTracker() {
 
   const processStartList = (data: any[]) => {
     const processedRunners: any[] | ((prevState: never[]) => never[]) = [];
-    const teamMap: { [key: string]: any } = {};
+    const teamMap: Record<string, Team> = {};
     const teamBibMap: { [key: string]: number } = {}; // Map team names to bib numbers
 
     // First pass: create teams and assign bib numbers
@@ -152,6 +164,10 @@ export default function RaceTracker() {
     const bib = parseInt(bibSearch);
     // Find the team that has this bib number
     const team = Object.values(teams).find(team => team.bib === bib);
+
+    if (selectedTeam) {
+      setSearchHistory(history => [selectedTeam, ...history]);
+    }
     
     if (team) {
       setSelectedTeam(team);
@@ -162,11 +178,11 @@ export default function RaceTracker() {
     setBibSearch(''); // Reset input field
   };
 
-  const registerFinish = () => {
-    if (!selectedTeam) return;
+  const registerFinish = (team: Team | null = selectedTeam) => {
+    if (!team) return;
 
     const finishTime = new Date().toLocaleTimeString('en-GB');
-    const alreadyFinished = finishedTeams.find(t => t.teamName === selectedTeam.teamName);
+    const alreadyFinished = finishedTeams.find(t => t.teamName === team.teamName);
     
     if (alreadyFinished) {
       alert('This team has already finished!');
@@ -174,10 +190,10 @@ export default function RaceTracker() {
     }
 
     const newFinish = {
-      ...selectedTeam,
+      ...team,
       finishTime: finishTime,
       finishOrder: finishedTeams.length + 1,
-      distance: selectedTeam.distance
+      distance: team.distance
     };
 
     const updatedFinished = [...finishedTeams, newFinish];
@@ -185,10 +201,59 @@ export default function RaceTracker() {
     saveToStorage(runners, teams, updatedFinished);
     
     //alert(`Finish registered! Time: ${finishTime}`);
-    setSelectedTeam(null);
+    if (selectedTeam?.teamName === team.teamName) {
+      setSelectedTeam(null);
+    }
   };
 
-  const openFinishModal = (team: SetStateAction<null>) => {
+  const renderTeamCard = (team: Team) => {
+    const finishedTeam = finishedTeams.find(t => t.teamName === team.teamName);
+
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h2 className="text-2xl font-bold text-indigo-900">{team.teamName}</h2>
+            <p className="text-gray-600">Bib #{team.bib} • {team.distance}</p>
+            {finishedTeam && (
+              <p className="text-green-600 font-semibold mt-1">
+                ✓ Finished at {finishedTeam.finishTime}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => registerFinish(team)}
+            disabled={finishedTeam}
+            className={`px-6 py-3 rounded-lg font-semibold flex items-center gap-2 ${
+              finishedTeam
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-green-600 text-white hover:bg-green-700'
+            }`}
+          >
+            <CheckCircle className="w-5 h-5" />
+            <span className="hidden md:inline">Register Finish</span>
+          </button>
+        </div>
+
+        <div className="mb-4 text-gray-700">
+          <p><strong>Origin:</strong> {team.city}{team.country ? `, ${team.country}` : ''}</p>
+          {team.club && <p><strong>Club:</strong> {team.club}</p>}
+        </div>
+
+        <h3 className="font-semibold text-lg mb-2">Team Members:</h3>
+        <div className="space-y-2">
+          {team.runners.map((runner, idx) => (
+            <div key={idx} className="p-3 bg-gray-50 rounded border border-gray-200">
+              <p className="font-semibold">{runner.firstName} {runner.lastName}</p>
+              <p className="text-sm text-gray-600">{runner.gender}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const openFinishModal = (team: Team) => {
     setFinishModalTeam(team);
     setEditableFinishTime(new Date().toLocaleTimeString('en-GB'));
     setShowFinishModal(true);
@@ -305,6 +370,7 @@ export default function RaceTracker() {
       setTeams({});
       setFinishedTeams([]);
       setSelectedTeam(null);
+      setSearchHistory([]);
       setBibSearch('');
       setShowResetModal(false);
       setResetConfirmText('');
@@ -428,7 +494,7 @@ export default function RaceTracker() {
                         )}
                       </div>
                       <button
-                        onClick={registerFinish}
+                        onClick={() => registerFinish()}
                         disabled={finishedTeams.find(t => t.teamName === selectedTeam.teamName)}
                         className={`px-6 py-3 rounded-lg font-semibold flex items-center gap-2 ${
                           finishedTeams.find(t => t.teamName === selectedTeam.teamName)
@@ -456,6 +522,16 @@ export default function RaceTracker() {
                       ))}
                     </div>
                   </div>
+                )}
+                {searchHistory.length > 0 && (
+                  <section className="space-y-6">
+                    <h2 className="text-lg font-semibold text-gray-700">Previous searches</h2>
+                    {searchHistory.map((team, index) => (
+                      <div key={`${team.bib}-${index}`}>
+                        {renderTeamCard(team)}
+                      </div>
+                    ))}
+                  </section>
                 )}
               </div>
             ) : (
