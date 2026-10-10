@@ -1,8 +1,191 @@
 @import "tailwindcss";
 
 #root {
-  text-align: center;
-  color: #444;
   width: 100%;
+  min-height: 100vh;
+  text-align: left;
 }
 
+.race-tracker-app {
+  --race-bg: #080d18;
+  --race-panel: #111827;
+  --race-panel-raised: #182233;
+  --race-border: #293548;
+  --race-text: #f3f4f6;
+  --race-muted: #a5afbd;
+  --race-green: #19c765;
+  --race-green-hover: #13ae56;
+  --race-lime: #d0df22;
+  min-height: 100vh;
+  color: var(--race-text);
+  background:
+    radial-gradient(circle at 8% 12%, rgb(255 255 255 / 34%) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 84% 21%, rgb(255 255 255 / 25%) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 28% 64%, rgb(255 255 255 / 20%) 0 1px, transparent 1.8px),
+    radial-gradient(ellipse at top, #101a2a 0%, var(--race-bg) 64%);
+  background-size: 173px 191px, 229px 217px, 263px 251px, auto;
+}
+
+.race-tracker-header {
+  display: flex;
+  align-items: center;
+  background: rgb(9 14 27 / 92%);
+  border: 1px solid #263244;
+  box-shadow: 0 14px 34px rgb(0 0 0 / 24%);
+}
+
+.race-tracker-brand {
+  color: var(--race-text);
+}
+
+.race-tracker-brand img {
+  border-radius: 50%;
+  border: 1px solid rgb(208 223 34 / 60%);
+}
+
+.race-tracker-wordmark {
+  color: var(--race-lime);
+  font-family: Impact, "Arial Narrow", sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.07em;
+  line-height: 1.15;
+}
+
+.race-tracker-app .bg-white {
+  color: var(--race-text);
+  background-color: var(--race-panel);
+  border: 1px solid var(--race-border);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 23%);
+}
+
+.race-tracker-app .bg-gray-50,
+.race-tracker-app .bg-gray-100 {
+  color: var(--race-text);
+  background-color: var(--race-panel-raised);
+}
+
+.race-tracker-app .bg-gray-200 {
+  color: #e5e7eb;
+  background-color: #293548;
+}
+
+.race-tracker-app .text-gray-900,
+.race-tracker-app .text-gray-800,
+.race-tracker-app .text-gray-700 {
+  color: #e5e7eb;
+}
+
+.race-tracker-app .text-gray-600,
+.race-tracker-app .text-gray-500 {
+  color: var(--race-muted);
+}
+
+.race-tracker-app .text-indigo-900,
+.race-tracker-app .text-indigo-600 {
+  color: #7be8a6;
+}
+
+.race-tracker-app .text-indigo-500 {
+  color: var(--race-green);
+}
+
+.race-tracker-app .bg-indigo-600,
+.race-tracker-app .bg-blue-600 {
+  color: #06120b;
+  background-color: var(--race-green);
+}
+
+.race-tracker-app .hover\:bg-indigo-700:hover,
+.race-tracker-app .hover\:bg-blue-700:hover {
+  background-color: var(--race-green-hover);
+}
+
+.race-tracker-app .hover\:bg-indigo-50:hover {
+  background-color: #1c2c28;
+}
+
+.race-tracker-app .bg-green-600 {
+  color: #06120b;
+  background-color: var(--race-green);
+}
+
+.race-tracker-app .hover\:bg-green-700:hover {
+  background-color: var(--race-green-hover);
+}
+
+.race-tracker-app .bg-red-600 {
+  color: #fff;
+  background-color: #bd3d48;
+}
+
+.race-tracker-app .hover\:bg-red-700:hover {
+  background-color: #a9313c;
+}
+
+.race-tracker-app .text-green-600 {
+  color: #6ee7a0;
+}
+
+.race-tracker-app .text-red-600 {
+  color: #ff8189;
+}
+
+.race-tracker-app .border-gray-100,
+.race-tracker-app .border-gray-200,
+.race-tracker-app .border-gray-300 {
+  border-color: var(--race-border);
+}
+
+.race-tracker-app input,
+.race-tracker-app select {
+  color: var(--race-text);
+  background-color: #0c1421;
+  border-color: #3a485d;
+}
+
+.race-tracker-app input::placeholder {
+  color: #8290a2;
+}
+
+.race-tracker-app input:focus {
+  border-color: var(--race-green);
+  outline-color: var(--race-green);
+}
+
+.race-tracker-app table {
+  color: #e5e7eb;
+}
+
+.race-tracker-app thead {
+  background-color: #182233;
+  color: #c4cedb;
+}
+
+.race-tracker-app tbody tr {
+  border-color: var(--race-border);
+}
+
+.race-tracker-app .hover\:bg-gray-50:hover,
+.race-tracker-app .hover\:bg-gray-100:hover,
+.race-tracker-app .hover\:bg-gray-300:hover {
+  background-color: #263246;
+}
+
+.race-tracker-app .bg-black {
+  background-color: #000;
+}
+
+.race-tracker-app .fixed.inset-0 {
+  backdrop-filter: blur(4px);
+}
+
+@media (max-width: 640px) {
+  .race-tracker-app {
+    padding: 0.75rem;
+  }
+
+  .race-tracker-brand img {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}

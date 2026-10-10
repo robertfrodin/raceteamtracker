@@ -1,6 +1,7 @@
 import { useState, useEffect, type SetStateAction, type JSXElementConstructor, type Key, type ReactElement, type ReactNode, type ReactPortal } from 'react';
 import { Upload, Search, CheckCircle, Trophy, Download, Trash2, AlertTriangle } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import raceLogo from './assets/Kroppefjäll-Trailrun-Neutral-Logga.png';
 import './App.css'
 
 type Team = {
@@ -60,13 +61,38 @@ export default function RaceTracker() {
       const runnersData = localStorage.getItem('runners');
       const teamsData = localStorage.getItem('teams');
       const finishedData = localStorage.getItem('finished');
+      const searchStateData = localStorage.getItem('searchState');
       
       if (runnersData) setRunners(JSON.parse(runnersData));
       if (teamsData) setTeams(JSON.parse(teamsData));
       if (finishedData) setFinishedTeams(JSON.parse(finishedData));
+      if (searchStateData) {
+        const searchState = JSON.parse(searchStateData) as {
+          selectedTeam?: Team | null;
+          history?: Team[];
+        };
+        setSelectedTeam(searchState.selectedTeam ?? null);
+        setSearchHistory(Array.isArray(searchState.history) ? searchState.history : []);
+      }
     } catch (error) {
       console.log('No stored data found');
     }
+  };
+
+  const saveSearchState = (selectedTeamData: Team | null, historyData: Team[]) => {
+    try {
+      localStorage.setItem('searchState', JSON.stringify({
+        selectedTeam: selectedTeamData,
+        history: historyData
+      }));
+    } catch (error) {
+      console.error('Failed to save search history:', error);
+    }
+  };
+
+  const clearSearchHistory = () => {
+    setSearchHistory([]);
+    saveSearchState(selectedTeam, []);
   };
 
   const saveToStorage = (runnersData: any[], teamsData: {}, finishedData: any[]) => {
@@ -165,9 +191,8 @@ export default function RaceTracker() {
     // Find the team that has this bib number
     const team = Object.values(teams).find(team => team.bib === bib);
 
-    if (selectedTeam) {
-      setSearchHistory(history => [selectedTeam, ...history]);
-    }
+    const updatedHistory = selectedTeam ? [selectedTeam, ...searchHistory] : searchHistory;
+    setSearchHistory(updatedHistory);
     
     if (team) {
       setSelectedTeam(team);
@@ -175,6 +200,7 @@ export default function RaceTracker() {
       setSelectedTeam(null);
       alert('Bib number not found');
     }
+    saveSearchState(team ?? null, updatedHistory);
     setBibSearch(''); // Reset input field
   };
 
@@ -203,6 +229,7 @@ export default function RaceTracker() {
     //alert(`Finish registered! Time: ${finishTime}`);
     if (selectedTeam?.teamName === team.teamName) {
       setSelectedTeam(null);
+      saveSearchState(null, searchHistory);
     }
   };
 
@@ -221,7 +248,7 @@ export default function RaceTracker() {
               </p>
             )}
           </div>
-          <button
+          {!finishedTeam && <button
             onClick={() => registerFinish(team)}
             disabled={finishedTeam}
             className={`px-6 py-3 rounded-lg font-semibold flex items-center gap-2 ${
@@ -232,7 +259,7 @@ export default function RaceTracker() {
           >
             <CheckCircle className="w-5 h-5" />
             <span className="hidden md:inline">Register Finish</span>
-          </button>
+          </button>}
         </div>
 
         <div className="mb-4 text-gray-700">
@@ -365,6 +392,7 @@ export default function RaceTracker() {
       localStorage.removeItem('runners');
       localStorage.removeItem('teams');
       localStorage.removeItem('finished');
+      localStorage.removeItem('searchState');
       
       setRunners([]);
       setTeams({});
@@ -383,13 +411,17 @@ export default function RaceTracker() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="race-tracker-app min-h-screen p-4">
       <div className="max-w-6xl mx-auto">
-        <header className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-3xl font-bold text-indigo-900 mb-2">KTR Team Tracker</h2>
-              <p className="text-gray-600 hidden sm:block">Track teams and log finish times</p>
+        <header className="race-tracker-header rounded-2xl p-4 sm:p-5 mb-6">
+          <div className="flex w-full justify-between items-center gap-4">
+            <div className="race-tracker-brand flex items-center gap-3 min-w-0">
+              <img src={raceLogo} alt="Kroppefjäll Trailrun logo" className="w-12 h-12 sm:w-14 sm:h-14 shrink-0" />
+              <div className="min-w-0">
+                <p className="race-tracker-wordmark">KROPPEFJÄLL TRAILRUN</p>
+                <h2 className="text-xl sm:text-2xl font-bold mb-0">Team Tracker</h2>
+                <p className="text-sm hidden sm:block">Track teams and log finish times</p>
+              </div>
             </div>
             {runners.length > 0 && (
               <div className="flex gap-2">
@@ -493,7 +525,7 @@ export default function RaceTracker() {
                           </p>
                         )}
                       </div>
-                      <button
+                      {finishedTeams.find(t => t.teamName === selectedTeam.teamName) == null && <button
                         onClick={() => registerFinish()}
                         disabled={finishedTeams.find(t => t.teamName === selectedTeam.teamName)}
                         className={`px-6 py-3 rounded-lg font-semibold flex items-center gap-2 ${
@@ -504,7 +536,7 @@ export default function RaceTracker() {
                       >
                         <CheckCircle className="w-5 h-5" />
                         <span className="hidden md:inline">Register Finish</span>
-                      </button>
+                      </button>}
                     </div>
 
                     <div className="mb-4 text-gray-700">
@@ -531,6 +563,13 @@ export default function RaceTracker() {
                         {renderTeamCard(team)}
                       </div>
                     ))}
+                    <button
+                      onClick={clearSearchHistory}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Clear Search History
+                    </button>
                   </section>
                 )}
               </div>
