@@ -452,12 +452,16 @@ export default function RaceTracker() {
             <Upload className="w-16 h-16 mx-auto text-indigo-500 mb-4" />
             <h2 className="text-2xl font-semibold mb-4">Upload Start List</h2>
             <p className="text-gray-600 mb-6">Upload your Excel file from raceId to get started</p>
-            <input
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={handleFileUpload}
-              className="block mx-auto"
-            />
+            <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold cursor-pointer inline-flex items-center gap-2">
+              <Upload className="w-4 h-4" />
+              Upload Start List
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </label>
           </div>
         ) : (
           <>
