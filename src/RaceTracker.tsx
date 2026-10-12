@@ -140,7 +140,7 @@ export default function RaceTracker() {
     // Second pass: process runners with team bib numbers
     data.forEach((row) => {
       const teamName = row['Team name'] || 'Individual';
-      const rawDistance = row['Distance'] || '';
+      const rawDistance = row['Distance'] || row['Distance Name'] || '';
       // Clean distance: remove everything in parentheses and trim
       const cleanDistance = rawDistance.replace(/\s*\(.*?\)\s*/g, '').trim();
       
