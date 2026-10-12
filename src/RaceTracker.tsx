@@ -225,12 +225,6 @@ export default function RaceTracker() {
     const updatedFinished = [...finishedTeams, newFinish];
     setFinishedTeams(updatedFinished);
     saveToStorage(runners, teams, updatedFinished);
-    
-    //alert(`Finish registered! Time: ${finishTime}`);
-    if (selectedTeam?.teamName === team.teamName) {
-      setSelectedTeam(null);
-      saveSearchState(null, searchHistory);
-    }
   };
 
   const renderTeamCard = (team: Team) => {
